@@ -33,8 +33,9 @@
 			    color: "red",
 			    href: "",//结合全局enableLinks选项为列表树节点指定URL。
 			    selectable: true,
+
 			    state: {
-				    checked: false,
+				    checked: true,
 				    disabled: false,
 				    expanded: false,
 				    selected: false
@@ -125,8 +126,13 @@
 			onLoad();
 			//绑定事件
 			BindEvent();
+			//搜索事件
 			$('#search').bind('input propertychange', function() {
-			    alert("dddd")
+			    $('#tree').treeview('search', [ $("#search").val(), {
+				  ignoreCase: true,     // case insensitive
+				  exactMatch: false,    // like or equals
+				  revealResults: true,  // reveal matching nodes
+				}]);
 			});
 		});
 		//页面加载
@@ -138,6 +144,7 @@
 				//multiSelect: false,
 				//showTags:true,
 				//enableLinks:true,
+				showCheckbox:true,
 				collapseIcon:"glyphicon glyphicon-home",
 			    expandIcon:"glyphicon glyphicon-home",
 			    
@@ -151,6 +158,8 @@
 			    	$("#orgName").val(data.text)
 			    	//需要发送ajax请求向后端拉取数据进行回显
 			    }
+
+
 			});	
 	     }
 	     
@@ -161,6 +170,10 @@
 	     	 	$('#addOperation-dialog').modal('hide')
                     $("#tree").treeview("addNode", [-1, { node: { text: $('#addName').val()} }]);
                 });
+
+
+
+
 
 	     	//新增子节点
 	     	$("#SaveSub").click(function () {
@@ -181,157 +194,179 @@
 	     	 			return;
 	     			}
 	     	 		var nodess = getSelected()
-	     	 		alert(nodess)
+	     	 		
                     $("#tree").treeview("addNode", [getSelected(), { node: { text: $('#addSubName').val(), href: "" } }]);
             });
 	     }
 
 		</script>
+		<script type="text/javascript">
+			function selectAll(){
+				$('#tree').treeview('checkNode', [ getSelected(), { silent: true } ]);
+
+				$('#tree').treeview('checkAll', { silent: true });
+			}
+		</script>
 </head>
 <body style="padding: 10px;">
 <!--弹出框 添加根节点 start-->
-<div class="panel panel-primary">
-    <div class="modal fade toast-center-center" id="addOperation-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content radius_5">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
-                    <h4 class="modal-title" id="myModalLabel"><i class="glyphicon glyphicon-floppy-save"></i>    新增根节点</h4>
-                </div>
-                <div class="modal-body">
-                    <div group="" item="add">
-                        <div>
-                            <!--根节点的父节点是0-->
-                            <input type="hidden" name="" id="parentIdForRootNode" name="parentId">
-                            <div class="input-group margin-t-5">
-                                <span class="input-group-addon"><i class="glyphicon glyphicon-asterisk" style="color: red"></i>组织名称:</span>
-                                <input id="orgName" name="orgName" type="text" class="form-control" />
+<div class="modal fade" id="addOperation-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content radius_5">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="myModalLabel">新增根节点</h4>
+			</div>
+			<div class="modal-body">
+				<div group="" item="add">
+					<div>
+					    <!--根节点的父节点是0-->
+						<input type="text" name="" id="parentIdForRootNode" name="parentId">
+						<div class="input-group margin-t-5">
+						<i class="input-group-addon glyphicon glyphicon-asterisk" style="color:red"></i><span class="input-group-addon">组织名称:</span>
+							<input id="addName" name="orgName" type="text" class="form-control" /> 
+							
+						</div>
+						<div class="input-group margin-t-5">
+							<span class="input-group-addon">组织领导（汇报对象）:</span>
+							<input name="orgLeader" type="text" class="form-control" />
+						</div>
+						<div class="input-group margin-t-5">
+							<span class="input-group-addon">备注:</span>
+							<input name="remark" type="text" class="form-control" />
+						</div>
 
-                            </div>
-                            <div class="input-group margin-t-5">
-                                <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i>组织领导（汇报对象）:</span>
-                                <input id="orgLeader" type="text" class="form-control" />
-                            </div>
-                            <div class="input-group margin-t-5">
-                                <span class="input-group-addon"><i class="glyphicon glyphicon-comment"></i>备注:</span>
-                                <input id="remark" type="text" class="form-control" />
-                            </div>
+					</div>
+				</div>
 
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button id="Save" type="button" class="btn btn-primary">保存</button>
-                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-                </div>
-            </div>
-        </div>
-    </div>
+			</div>
+			<div class="modal-footer">
+				<button id="Save" type="button" class="btn btn-primary">保存</button>
+				<button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+
+			</div>
+		</div>
+	</div>
 </div>
 <!--弹出框 添加根节点 end-->
 
 <!--弹出框 添加子节点 start-->
-<div class="modal fade toast-center-center" id="addSubOperation-dialog" tabindex="-1" role="dialog" aria-labelledby="mySubModalLabel"  aria-hidden="true" style="display: none">
-    <div class="modal-dialog" role="document">
+<div class="modal fade" id="addSubOperation-dialog" tabindex="-1" role="dialog" aria-labelledby="mySubModalLabel">
+	<div class="modal-dialog" role="document">
 
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
-                <h4 class="modal-title" id="mySubModalLabel">新增子节点</h4>
-            </div>
-            <div class="modal-body">
-                <div group="" item="add">
-                    <div>
-                        <!--子节点的父节点-->
-                        <input type="hidden" name="" id="parentId" name="parentId">
-                        <div class="input-group margin-t-5">
-                            <span class="input-group-addon"><i class="glyphicon glyphicon-asterisk" style="color: red"></i>组织名称:</span>
-                            <input id="subOrgName" name="orgName" type="text" class="form-control" />
-                        </div>
-                        <div class="input-group margin-t-5">
-                            <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i>组织领导（汇报对象）:</span>
-                            <input id="subOrgLeader" type="text" class="form-control" />
-                        </div>
-                        <div class="input-group margin-t-5">
-                            <span class="input-group-addon"><i class="glyphicon glyphicon-comment"></i>备注:</span>
-                            <input id="subRemark" type="text" class="form-control" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="SaveSub" type="button" class="btn btn-primary">保存</button>
-                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-            </div>
-        </div>
-    </div>
+		<div class="modal-content radius_5">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="mySubModalLabel">新增子节点</h4>
+			</div>
+			<div class="modal-body">
+				<div group="" item="add">
+					<div>
+						<!--子节点的父节点-->
+						<input type="text" name="" id="parentId" name="parentId">
+						<div class="input-group margin-t-5">
+							<i class="input-group-addon glyphicon glyphicon-asterisk" style="color:red"></i>
+							<span class="input-group-addon">组织名称:</span>
+							<input id="addSubName" name="orgName" type="text" class="form-control" />
+						</div>
+						<div class="input-group margin-t-5">
+							<span class="input-group-addon">组织领导（汇报对象）:</span>
+							<input name="orgLeader" type="text" class="form-control" />
+						</div>
+						<div class="input-group margin-t-5">
+							<span class="input-group-addon">备注:</span>
+							<input name="remark" type="text" class="form-control" />
+						</div>
+
+					</div>
+				</div>
+
+			</div>
+			<div class="modal-footer">
+				<button id="SaveSub" type="button" class="btn btn-primary">保存</button>
+				<button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+
+			</div>
+		</div>
+	</div>
 </div>
 <!--弹出框 添加子节点 end-->
-<div class="container-fluid">
-    <div class="col-md-12">
-        <input class="btn btn-success" type="button" value="折叠所有节点" onclick="collapseAll()">
-        <input class="btn btn-danger" type="button" value="删除节点" onclick="delNode()">
-        <input class="btn btn-primary" type="button" value="添加根节点" onclick="addRootNode()">
-        <input class="btn btn-primary" type="button" value="添加子节点" onclick="addNode()">
-    </div>
-    <div class="col-md-12"><br></div>
+<header class="container" style="margin-bottom: 35px;">
+	<div class="row">
+		<div class="col-md-12">
+		    <input class="btn btn-success" type="button" value="折叠所有节点" onclick="collapseAll()">
+		    <input class="btn btn-danger" type="button" value="删除节点" onclick="delNode()">
+		    <input class="btn btn-primary" type="button" value="添加根节点" onclick="addRootNode()">
+			<input class="btn btn-primary" type="button" value="添加子节点" onclick="addNode()">
+			<input class="btn btn-success" type="button" value="展开所有节点" onclick="expandAll()">
+			<input class="btn btn-success" type="button" value="选中所有节点" onclick="selectAll()">
+			<input class="btn btn-success" type="button" value="不选中所有节点" onclick="unSelectAll()">
 
-    <div class="row">
-    	<div class="col-md-4">
-	    	<form action="" class="search-form">
-	            <div class="form-group has-feedback">
-	        		<label for="search" class="sr-only">Search</label>
-	        		<input type="text" class="form-control" name="search" id="search" placeholder="请输入内容">
-	          		<span class="glyphicon glyphicon-search form-control-feedback"></span>
-	        	</div>
-	        </form>
-    </div>
-    </div>
+
+
+			
+
+		</div>
+	</div>
+	<br>
+	<div class="row">
+        <div class="col-md-4 col-md-offset-1">
+            <form action="" class="search-form">
+                <div class="form-group has-feedback">
+            		<label for="search" class="sr-only">Search</label>
+            		<input type="text" class="form-control" name="search" id="search" placeholder="请输入内容">
+              		<span class="glyphicon glyphicon-search form-control-feedback"></span>
+            	</div>
+            </form>
+        </div>
+   	</div>
+</header>
+<div class="container">
+		<div class="row">
+			<div class="col-md-5">
+				<div class="panel panel-primary ">
+					<div class="panel-heading">
+						<h3 class="panel-title">组织列表</h3>
+					</div>
+					<div class="panel-body right_centent" style="">
+						<div id="tree"></div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-7">
+				<div class="panel panel-primary ">
+					<div class="panel-heading">
+						<h3 class="panel-title">组织机构编辑</h3>
+					</div>
+					<!-- start-->
+                <div class="panel-body right_centent">
+                	<div>
+						<!--编辑的时候使用的父ID和本条记录的ID-->
+                		<input type="text" name="" id="orgId">
+                        <div class="input-group margin-t-5">
+							<span class="input-group-addon">组织名称:</span>
+							<input id="orgName" name="orgName" type="text" class="form-control" />
+						</div>
+						<div class="input-group margin-t-5">
+							<span class="input-group-addon">组织领导（汇报对象）:</span>
+							<input name="orgLeader" type="text" class="form-control" />
+						</div>
+						<div class="input-group margin-t-5">
+							<span class="input-group-addon">备注:</span>
+							<input name="remark" type="text" class="form-control" />
+						</div>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <input class="btn btn-primary" type="button" value="确定" onclick="orgEdit()" />
+                        <input class="btn btn-primary" type="button" value="重置" onclick="reset()" />
+                    </div>
+                </div>
+                <!--end-->
+				</div>
+			</div>
+		</div>
+	</div>
     
-   	
-   
-    <div class="col-md-6">
-        <div class="panel panel-primary ">
-            <div class="panel-heading">
-                <h3 class="panel-title"><i class="glyphicon glyphicon-th-list"></i>    组织列表</h3>
-            </div>
-            <div class="panel-body right_centent" style="padding:15px">
-                <div id="tree"></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="panel panel-primary ">
-            <div class="panel-heading">
-                <h3 class="panel-title"><i class="glyphicon glyphicon-edit"></i>    组织机构编辑</h3>
-            </div>
-            <!-- start-->
-            <div class="panel-body right_centent">
-                <div>
-                    <!--编辑的时候使用的父ID和本条记录的ID-->
-                    <input type="hidden" name="" id="orgId">
-                    <div class="input-group">
-                        <span class="input-group-addon"><i class="glyphicon glyphicon-asterisk" style="color: red"></i>组织名称:</span>
-                            <input id="editOrgName" type="text" class="form-control" required/>
-                    </div>
-                    <div class="input-group margin-t-5 ">
-                        <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i>组织领导（汇报对象）:</span>
-                        <input id="editOrgLeader" type="text" class="form-control"/>
-                    </div>
-                    <div class="input-group">
-                        <span class="input-group-addon"><i class="glyphicon glyphicon-comment"></i>备注:</span>
-                        <input id="editRemark" type="text" class="form-control"/>
-                    </div>
-                </div>
-                <div style="margin-top: 10px;">
-                    </i><input class="btn btn-primary" type="button" value="确定" onclick="orgEdit()" />
-                    <input class="btn btn-default" type="button" value="重置" onclick="reset()" />
-                </div>
-            </div>
-            <!--end-->
-        </div>
-    </div>
-</div>
 <button type="button" id="modalBtn" class="btn btn-primary">点击弹出modal</button>
 
     <div class="modal fade" id="myModal">
@@ -366,5 +401,10 @@
       });
     </script>
 
+
+
+
+
+    
     </body>
 </html>
