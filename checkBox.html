@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <!--bootstrap基础引用 start-->
+    <script type="text/javascript" src="public/bootstrap/jquery-3.1.1.min.js"></script>
+    <link rel="stylesheet" href="public/bootstrap/bootstrap.min.css">
+    <script type="text/javascript" src="public/bootstrap/bootstrap.min.js"></script>
+    <!--bootstrap基础引用 end-->
+    <!--bootstrap-dialog start-->
+    <link rel="stylesheet" type="text/css" href="plugins/bootstrap-dialog/bootstrap-dialog.min.css">
+    <script type="text/javascript" src="plugins/bootstrap-dialog/bootstrap-dialog.min.js"></script>
+    <!--bootstrap-dialog end-->
+    <!--bootstrap-treeview start-->
+    <link rel="stylesheet" type="text/css" href="plugins/bootstrap-treeview/bootstrap-treeview.min.css">
+    <script type="text/javascript" src="plugins/bootstrap-treeview/bootstrap-treeview.min.js"></script>
+    <!--bootstrap-treeview end-->
+    <!--bootstrap-dialog start-->
+    <link rel="stylesheet" type="text/css" href="plugins/bootstrap-dialog/bootstrap-dialog.min.css">
+    <script type="text/javascript" src="plugins/bootstrap-dialog/bootstrap-dialog.min.js"></script>
+    <!--bootstrap-dialog end-->
+    <script type="text/javascript" src="public/javascripts/customPlugin.js"></script>
+    <script type="text/javascript" src="public/javascripts/organization.js"></script>
+    <script type="text/javascript">
+        function getTree() {
+            var defaultData = [
+                {
+                    text: 'Parent 1',
+                    href: '#parent1',
+                    tags: ['4'],
+                    state: {
+                        checked: true
+                    },
+                    nodes: [
+                        {
+                            text: 'Child 1',
+                            href: '#child1',
+                            tags: ['2'],
+                            nodes: [
+                                {
+                                    text: 'Grandchild 1',
+                                    href: '#grandchild1',
+                                    tags: ['0']
+                                },
+                                {
+                                    text: 'Grandchild 2',
+                                    href: '#grandchild2',
+                                    tags: ['0']
+                                }
+                            ]
+                        },
+                        {
+                            text: 'Child 2',
+                            href: '#child2',
+                            tags: ['0']
+                        }
+                    ]
+                },
+                {
+                    text: 'Parent 2',
+                    href: '#parent2',
+                    tags: ['0'],
+                    nodes: [
+                        {
+                            text: 'Child 1',
+                            href: '#child1',
+                            tags: ['2'],
+                            nodes: [
+                                {
+                                    text: 'Grandchild 1',
+                                    href: '#grandchild1',
+                                    tags: ['0']
+                                },
+                                {
+                                    text: 'Grandchild 2',
+                                    href: '#grandchild2',
+                                    tags: ['0']
+                                }
+                            ]
+                        },
+                        {
+                            text: 'Child 2',
+                            href: '#child2',
+                            tags: ['0']
+                        }
+                    ]
+                },
+                {
+                    text: 'Parent 3',
+                    href: '#parent3'
+                },
+                {
+                    text: 'Parent 4',
+                    href: '#parent4',
+                    tags: ['0']
+                },
+                {
+                    text: 'Parent 5',
+                    href: '#parent5',
+                    tags: ['0']
+                }
+            ];
+
+            return defaultData;
+        }
+        var checkedList = []
+        $(function () {
+            var $checkableTree = $('#treeview-checkable')
+                .treeview({
+                    data: getTree(),
+                    showIcon: true,
+                    showCheckbox: true,
+                    levels: 12,
+                    onNodeChecked: function (event, node) { //选中节点
+                        var selectNodes = getChildNodeIdArr(node); //获取所有子节点
+                        alert(selectNodes)
+                        if (selectNodes) { //子节点不为空，则选中所有子节点
+                            $('#treeview-checkable').treeview('checkNode', [selectNodes, {silent: true}]);
+                        }
+
+                    },
+                    onNodeUnchecked: function (event, node) { //取消选中节点
+                        var selectNodes = getChildNodeIdArr(node); //获取所有子节点
+                        if (selectNodes) { //子节点不为空，则取消选中所有子节点
+                            $('#treeview-checkable').treeview('uncheckNode', [selectNodes, {silent: true}]);
+                        }
+                    },
+                });
+        });
+        function getChildNodeIdArr(node) {
+            var ts = [];
+            if (node.nodes) {
+                for (x in node.nodes) {
+                    ts.push(node.nodes[x].nodeId);
+                    if (node.nodes[x].nodes) {
+                        var getNodeDieDai = getChildNodeIdArr(node.nodes[x]);
+                        for (j in getNodeDieDai) {
+                            ts.push(getNodeDieDai[j]);
+                        }
+                    }
+                }
+            } else {
+                ts.push(node.nodeId);
+            }
+            return ts;
+        }
+    </script>
+</head>
+<body>
+<div id="treeview-checkable"></div>
+</body>
+</html>
